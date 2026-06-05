@@ -1,18 +1,18 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "healthy-scaffold",
+  "productName": "healthy",
   "version": "0.1.0",
-  "identifier": "com.nicholasf.healthy-scaffold",
+  "identifier": "com.nicholasf.healthy",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
-        "title": "healthy-scaffold",
+        "title": "healthy",
         "width": 800,
         "height": 600
       }

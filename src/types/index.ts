@@ -1,1 +1,2 @@
-export {};
+export type Entry = { id: number; date: string; time: string; weightKg: number | null; bpSystolic: number | null; bpDiastolic: number | null; energyLevel: number | null; notes: string | null; createdAt: string; }
+export type Setting = { key: string; value: string; }
