@@ -1,4 +1,4 @@
-import { useEntries } from '../hooks/useEntries';
+import type { Entry } from '../types';
 import {
   LineChart,
   Line,
@@ -10,106 +10,78 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-export default function Charts() {
-  const { entries, loading } = useEntries();
-
-  if (loading) {
-    return <div className="text-center py-4">Loading data...</div>;
-  }
-
-  if (entries.length === 0) {
-    return <div className="text-center py-4 text-gray-500">No data to chart.</div>;
-  }
-
-  // Prepare data sorted by date
-  const sortedEntries = [...entries]
-    .filter(entry => entry.date) // Ensure date exists
+function sortedByDate(entries: Entry[]) {
+  return [...entries]
+    .filter(e => e.date)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
 
-  // Weight chart data
-  const weightData = sortedEntries
-    .filter(entry => entry.weightKg !== null)
-    .map(entry => ({
-      datetime: entry.date + ' ' + entry.time,
-      weight: entry.weightKg
-    }));
+export function WeightChart({ entries }: { entries: Entry[] }) {
+  const data = sortedByDate(entries)
+    .filter(e => e.weightKg !== null)
+    .map(e => ({ datetime: `${e.date} ${e.time}`, weight: e.weightKg }));
 
-  // Blood pressure chart data
-  const bpData = sortedEntries
-    .filter(entry => entry.bpSystolic !== null || entry.bpDiastolic !== null)
-    .map(entry => ({
-      datetime: entry.date + ' ' + entry.time,
-      systolic: entry.bpSystolic,
-      diastolic: entry.bpDiastolic
-    }));
-
-  // Energy level chart data
-  const energyData = sortedEntries
-    .filter(entry => entry.energyLevel !== null)
-    .map(entry => ({
-      datetime: entry.date + ' ' + entry.time,
-      energy: entry.energyLevel
-    }));
+  if (data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-sm text-gray-500">No weight data to display.</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Weight Chart */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Weight Over Time</h3>
-        {weightData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={weightData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="datetime" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="weight" stroke="#3b82f6" activeDot={{ r: 8 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-center py-4 text-gray-500">No weight data to display.</div>
-        )}
-      </div>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="datetime" tick={{ fontSize: 11 }} />
+        <YAxis domain={['auto', 'auto']} />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="weight" stroke="#3b82f6" dot={false} activeDot={{ r: 6 }} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
 
-      {/* Blood Pressure Chart */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Blood Pressure Over Time</h3>
-        {bpData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={bpData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="datetime" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="systolic" stroke="#ef4444" name="Systolic" />
-              <Line type="monotone" dataKey="diastolic" stroke="#10b981" name="Diastolic" />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-center py-4 text-gray-500">No blood pressure data to display.</div>
-        )}
-      </div>
+export function BpChart({ entries }: { entries: Entry[] }) {
+  const data = sortedByDate(entries)
+    .filter(e => e.bpSystolic !== null || e.bpDiastolic !== null)
+    .map(e => ({ datetime: `${e.date} ${e.time}`, systolic: e.bpSystolic, diastolic: e.bpDiastolic }));
 
-      {/* Energy Level Chart */}
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Energy Level Over Time</h3>
-        {energyData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={energyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="datetime" />
-              <YAxis domain={[0, 5]} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="energy" stroke="#8b5cf6" activeDot={{ r: 8 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="text-center py-4 text-gray-500">No energy level data to display.</div>
-        )}
-      </div>
-    </div>
+  if (data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-sm text-gray-500">No blood pressure data to display.</div>;
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="datetime" tick={{ fontSize: 11 }} />
+        <YAxis domain={['auto', 'auto']} />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="systolic" stroke="#ef4444" name="Systolic" dot={false} />
+        <Line type="monotone" dataKey="diastolic" stroke="#10b981" name="Diastolic" dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function EnergyChart({ entries }: { entries: Entry[] }) {
+  const data = sortedByDate(entries)
+    .filter(e => e.energyLevel !== null)
+    .map(e => ({ datetime: `${e.date} ${e.time}`, energy: e.energyLevel }));
+
+  if (data.length === 0) {
+    return <div className="flex items-center justify-center h-full text-sm text-gray-500">No energy level data to display.</div>;
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="datetime" tick={{ fontSize: 11 }} />
+        <YAxis domain={[0, 5]} />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="energy" stroke="#8b5cf6" dot={false} activeDot={{ r: 6 }} />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function EntryForm() {
+export default function EntryForm({ onEntryAdded }: { onEntryAdded?: () => void }) {
   const { addEntry, entries } = useEntries();
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState<string>('');
@@ -64,6 +64,7 @@ export default function EntryForm() {
         energyLevel,
         notes
       );
+      onEntryAdded?.();
       // Clear form on success
       setDate(new Date().toISOString().split('T')[0]);
       setTime('');
