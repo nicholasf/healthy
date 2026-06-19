@@ -15,15 +15,17 @@ fn query_setting(conn: &Connection, key: &str) -> Result<Option<String>, String>
 
 #[tauri::command]
 pub async fn get_observations(state: State<'_, AppState>) -> Result<String, String> {
-    let (api_url, api_token, api_model, entries_text) = {
+    let (api_provider, api_url, api_token, api_model, entries_text) = {
         let conn = state.db.lock().map_err(|_| "Failed to acquire database lock")?;
 
+        let api_provider = query_setting(&conn, "api_provider")?
+            .unwrap_or_else(|| "openai".to_string());
         let api_url = query_setting(&conn, "api_url")?
-            .ok_or_else(|| "API URL not configured. Add it in Settings.".to_string())?;
+            .unwrap_or_default();
         let api_token = query_setting(&conn, "api_token")?
             .ok_or_else(|| "API token not configured. Add it in Settings.".to_string())?;
         let api_model = query_setting(&conn, "api_model")?
-            .unwrap_or_else(|| "gpt-4o-mini".to_string());
+            .unwrap_or_else(|| "claude-sonnet-4-6".to_string());
 
         let mut stmt = conn
             .prepare("SELECT id, date, time, weight_kg, bp_systolic, bp_diastolic, energy_level, notes, created_at FROM entries ORDER BY date DESC LIMIT 30")
@@ -61,10 +63,9 @@ pub async fn get_observations(state: State<'_, AppState>) -> Result<String, Stri
             ));
         }
 
-        (api_url, api_token, api_model, text)
+        (api_provider, api_url, api_token, api_model, text)
     }; // lock dropped here, before any await
 
-    let client = crate::llm::LlmClient { url: api_url, token: api_token, model: api_model };
     let system = "You are a health assistant. Analyze the following health tracking data and provide concise observations about trends in weight, blood pressure, and energy level. Note any patterns or concerns.";
-    crate::llm::complete(&client, system, &entries_text).await
+    crate::llm::complete(&api_provider, &api_url, &api_token, &api_model, system, &entries_text).await
 }

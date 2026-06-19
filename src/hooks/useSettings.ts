@@ -9,14 +9,16 @@ export function useSettings() {
     try {
       setLoading(true);
       // Load the required settings
+      const apiProvider = await getSetting('api_provider');
       const apiUrl = await getSetting('api_url');
       const apiToken = await getSetting('api_token');
       const apiModel = await getSetting('api_model');
-      
+
       setSettings({
+        api_provider: apiProvider || 'openai',
         api_url: apiUrl || '',
         api_token: apiToken || '',
-        api_model: apiModel || ''
+        api_model: apiModel || '',
       });
     } catch (error) {
       console.error('Failed to fetch settings:', error);
