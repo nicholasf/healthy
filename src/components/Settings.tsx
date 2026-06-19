@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import models from '../models.json';
 
 export default function Settings() {
   const { settings, setSetting, loading } = useSettings();
+  const [apiProvider, setApiProvider] = useState<string>(settings.api_provider || 'openai');
   const [apiUrl, setApiUrl] = useState<string>(settings.api_url || '');
   const [apiToken, setApiToken] = useState<string>(settings.api_token || '');
   const [apiModel, setApiModel] = useState<string>(settings.api_model || '');
@@ -16,6 +18,7 @@ export default function Settings() {
   const [exportPath, setExportPath] = useState<string | null>(null);
 
   useEffect(() => {
+    setApiProvider(settings.api_provider || 'openai');
     setApiUrl(settings.api_url || '');
     setApiToken(settings.api_token || '');
     setApiModel(settings.api_model || '');
@@ -23,12 +26,13 @@ export default function Settings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
+      await setSetting('api_provider', apiProvider);
       await setSetting('api_url', apiUrl);
       await setSetting('api_token', apiToken);
       await setSetting('api_model', apiModel);
-      
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
@@ -57,14 +61,37 @@ export default function Settings() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="apiUrl">API URL</Label>
-            <Input
-              type="text"
-              id="apiUrl"
-              value={apiUrl}
-              onChange={(e) => setApiUrl(e.target.value)}
-            />
+            <Label>Provider</Label>
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant={apiProvider === 'anthropic' ? 'default' : 'outline'}
+                onClick={() => setApiProvider('anthropic')}
+              >
+                Anthropic
+              </Button>
+              <Button
+                type="button"
+                variant={apiProvider === 'openai' ? 'default' : 'outline'}
+                onClick={() => setApiProvider('openai')}
+              >
+                OpenAI-compatible
+              </Button>
+            </div>
           </div>
+
+          {apiProvider === 'openai' && (
+            <div>
+              <Label htmlFor="apiUrl">API URL</Label>
+              <Input
+                type="text"
+                id="apiUrl"
+                placeholder="http://localhost:11434/v1"
+                value={apiUrl}
+                onChange={(e) => setApiUrl(e.target.value)}
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="apiToken">API Token</Label>
@@ -78,13 +105,16 @@ export default function Settings() {
 
           <div>
             <Label htmlFor="apiModel">Model</Label>
-            <Input
-              type="text"
+            <select
               id="apiModel"
-              placeholder="gpt-4o-mini"
               value={apiModel}
               onChange={(e) => setApiModel(e.target.value)}
-            />
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              {models.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
           </div>
 
           <Button type="submit">Save Settings</Button>
@@ -100,7 +130,7 @@ export default function Settings() {
           <Button variant="outline" onClick={handleExportCsv}>
             Export CSV
           </Button>
-          
+
           {exportPath && (
             <div className="mt-2 text-sm text-gray-600">
               Exported to: {exportPath}
